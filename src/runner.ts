@@ -6,13 +6,15 @@ import { execSync } from "child_process"
 import { EOL } from "os"
 import {sep, join} from "path"
 import { readFileSync } from "fs"
+import { bumpVersionVscode } from "./bumping/vscode"
+import { bumpVersionNPM } from "./bumping/npm"
 
 type RunSettings = {
   since: string
   cwd: string
 }
 
-type PackageMetadata = {
+export type PackageMetadata = {
   path: string
   dirname: string
   name: string
@@ -22,16 +24,35 @@ type PackageMetadata = {
 }
 
 export const run = async (settings: RunSettings) => {
-  console.log("Looking up git")
   const files = execSync(`git log --pretty=format: --name-only --since="${settings.since}"`,  { encoding: "utf8", cwd: settings.cwd })
   
   const changedPackages = getChangedPackages(files)
   const packageMetadata = getPackageMetadata(changedPackages, settings)
-  deploy(packageMetadata)
+  await bumpVersions(packageMetadata)
+  await deploy(packageMetadata)
 }
 
-function deploy(pacakgeMetadata: Set<PackageMetadata>) {
-  
+async function deploy(packageMetadata: Set<PackageMetadata>) {
+  for (const packageMD of packageMetadata) {
+    console.log(`Deploying ${packageMD.name}.`)
+    if (packageMD.type === "vscode") {
+      execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`,  { encoding: "utf8", cwd: packageMD.path })
+      
+    } else if(packageMD.type === "npm") {
+      execSync(`npm publish`, { encoding: "utf8", cwd: packageMD.path })
+    }
+  }
+}
+
+
+async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
+  for (const packageMD of packageMetadata) {  
+    if (packageMD.type === "vscode") {
+      await bumpVersionVscode(packageMD)
+    } else if(packageMD.type === "npm") {
+      await bumpVersionNPM(packageMD)
+    }
+  }
 }
 
 function getPackageMetadata(changedPackages: Set<string>, settings: RunSettings) {

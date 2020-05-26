@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
 import { execSync } from 'child_process'
 
 async function run(): Promise<void> {

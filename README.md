@@ -50,6 +50,19 @@ For a weekly deploy:
           since: '1 week ago'
 ```
 
+TODO: For a build where a specific file changing in the build triggers a deploy
+
+```yml
+      - uses orta/monorepo-deploy-nightly@master
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
+        with: 
+          since: '1 week ago'
+          changed: "relative/path/to/file/from/package'
+```
+
+
 ### TODO
 
 - All of the above
