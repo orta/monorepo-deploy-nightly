@@ -1,18 +1,17 @@
 import * as core from '@actions/core'
-import { execSync } from 'child_process'
+import {RunSettings, runDeployer} from './runner'
 
 async function run(): Promise<void> {
   try {
-    const since = core.getInput('since') || "1 day ago"
-    
-    const files = execSync(`git log --pretty=format: --name-only --since="${since}"`,  { encoding: "utf8" })
-    console.log(files)
+    const since = core.getInput('since') || '1 day ago'
+    const cwd = core.getInput('cwd') || '.'
 
-    // core.debug(new Date().toTimeString())
-    // await wait(parseInt(ms, 10))
-    // core.debug(new Date().toTimeString())
+    const settings: RunSettings = {
+      since,
+      cwd
+    }
 
-    // core.setOutput('time', new Date().toTimeString())
+    await runDeployer(settings)
   } catch (error) {
     core.setFailed(error.message)
   }

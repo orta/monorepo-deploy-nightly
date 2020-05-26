@@ -1,15 +1,15 @@
-// This file does the real work, you can test it locally via 
-// 
+// This file does the real work, you can test it locally via
+//
 // node lib/runner.js
 
-import { execSync } from "child_process"
-import { EOL } from "os"
-import {sep, join} from "path"
-import { readFileSync } from "fs"
-import { bumpVersionVscode } from "./bumping/vscode"
-import { bumpVersionNPM } from "./bumping/npm"
+import {execSync} from 'child_process'
+import {EOL} from 'os'
+import {sep, join} from 'path'
+import {readFileSync} from 'fs'
+import {bumpVersionVscode} from './bumping/vscode'
+import {bumpVersionNPM} from './bumping/npm'
 
-type RunSettings = {
+export type RunSettings = {
   since: string
   cwd: string
 }
@@ -20,12 +20,15 @@ export type PackageMetadata = {
   name: string
   packageJSON: any
   isPrivate: boolean
-  type: "npm" | "vscode"
+  type: 'npm' | 'vscode'
 }
 
-export const run = async (settings: RunSettings) => {
-  const files = execSync(`git log --pretty=format: --name-only --since="${settings.since}"`,  { encoding: "utf8", cwd: settings.cwd })
-  
+export const runDeployer = async (settings: RunSettings) => {
+  const files = execSync(
+    `git log --pretty=format: --name-only --since="${settings.since}"`,
+    {encoding: 'utf8', cwd: settings.cwd}
+  )
+
   const changedPackages = getChangedPackages(files)
   const packageMetadata = getPackageMetadata(changedPackages, settings)
   await bumpVersions(packageMetadata)
@@ -35,38 +38,41 @@ export const run = async (settings: RunSettings) => {
 async function deploy(packageMetadata: Set<PackageMetadata>) {
   for (const packageMD of packageMetadata) {
     console.log(`Deploying ${packageMD.name}.`)
-    if (packageMD.type === "vscode") {
-      execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`,  { encoding: "utf8", cwd: packageMD.path })
-      
-    } else if(packageMD.type === "npm") {
-      execSync(`npm publish`, { encoding: "utf8", cwd: packageMD.path })
+    if (packageMD.type === 'vscode') {
+      execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
+        encoding: 'utf8',
+        cwd: packageMD.path
+      })
+    } else if (packageMD.type === 'npm') {
+      execSync(`npm publish`, {encoding: 'utf8', cwd: packageMD.path})
     }
   }
 }
 
-
 async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
-  for (const packageMD of packageMetadata) {  
-    if (packageMD.type === "vscode") {
+  for (const packageMD of packageMetadata) {
+    if (packageMD.type === 'vscode') {
       await bumpVersionVscode(packageMD)
-    } else if(packageMD.type === "npm") {
+    } else if (packageMD.type === 'npm') {
       await bumpVersionNPM(packageMD)
     }
   }
 }
 
-function getPackageMetadata(changedPackages: Set<string>, settings: RunSettings) {
+function getPackageMetadata(
+  changedPackages: Set<string>,
+  settings: RunSettings
+) {
   const packageMetadata = new Set<PackageMetadata>()
 
   changedPackages.forEach(packagePath => {
-    const root = join(settings.cwd, "packages", packagePath)
+    const root = join(settings.cwd, 'packages', packagePath)
 
-    const packageJSONPath = join(root, "package.json")
-    const json = JSON.parse(readFileSync(packageJSONPath, "utf8"))
-
+    const packageJSONPath = join(root, 'package.json')
+    const json = JSON.parse(readFileSync(packageJSONPath, 'utf8'))
 
     const isVSCode = json && json.engines && json.engines.vscode
-    const type = isVSCode ? "vscode" : "npm"
+    const type = isVSCode ? 'vscode' : 'npm'
     const isPrivate = json.private
 
     packageMetadata.add({
@@ -85,15 +91,12 @@ function getPackageMetadata(changedPackages: Set<string>, settings: RunSettings)
 function getChangedPackages(files: string) {
   const changedPackages = new Set<string>()
   files.split(EOL).forEach(path => {
-    if (!path.length)
-      return
+    if (!path.length) return
 
     const dirs = path.split(sep)
 
-    if (dirs[0] !== "packages")
-      return
-    if (dirs.length < 2)
-      return
+    if (dirs[0] !== 'packages') return
+    if (dirs.length < 2) return
 
     changedPackages.add(dirs[1])
   })
@@ -101,5 +104,5 @@ function getChangedPackages(files: string) {
 }
 
 if (!module.parent) {
-  run({ since: "30 day ago", cwd: "../language-tools" })
+  runDeployer({since: '30 day ago', cwd: '../language-tools'})
 }
