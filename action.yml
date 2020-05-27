@@ -1,10 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'JS Monorepo Deploy Nightly'
+description: 'Deploys packages/* npm/vscode packages when the change'
+author: 'Orta Therox'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  since:              # change this
+    description: 'The time between deploys'
+    default: '1 day'
+  cwd:              # change this
+    description: 'The path to the folder which hosts packages'
+    default: '.'
 runs:
   using: 'node12'
   main: 'dist/index.js'
