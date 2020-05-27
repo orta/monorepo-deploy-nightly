@@ -14,7 +14,7 @@ const getPackageVersion = async (packageMD: PackageMetadata) => {
     return npmInfo.data['dist-tags'].latest;
     
   } catch (error) {
-    console.log("New package, starting from version in package.json")
+    console.log(`${packageMD.name} is a new package, starting from version in package.json`)
     const pkgPath = join(packageMD.path, "package.json");
     const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
     return oldPackageJSON.version;
@@ -33,5 +33,5 @@ export const bumpVersionNPM = async (packageMD: PackageMetadata) => {
   oldPackageJSON.version = newVersion;
   writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
 
-  console.log(`Updated ${packageMD.name} to ${newVersion}`);
+  console.log(`Updated ${packageMD.name} to ${newVersion} from npm`);
 };

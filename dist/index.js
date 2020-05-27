@@ -474,6 +474,7 @@ function deploy(packageMetadata) {
 }
 function bumpVersions(packageMetadata) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log(" ---------------------------- ");
         for (const packageMD of packageMetadata) {
             if (packageMD.type === 'vscode') {
                 yield vscode_1.bumpVersionVscode(packageMD);
@@ -962,15 +963,21 @@ const axios_1 = __importDefault(__webpack_require__(53));
 const path_1 = __webpack_require__(622);
 const fs_1 = __webpack_require__(747);
 exports.bumpVersionVscode = (md) => __awaiter(void 0, void 0, void 0, function* () {
-    const prod = yield getBetaExtension(md.packageJSON.publisher, md.packageJSON.name);
-    const latestVersion = prod.versions[0].version;
-    const semverMarkers = latestVersion.split(".");
-    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
     const pkgPath = path_1.join(md.path, "package.json");
     const oldPackageJSON = JSON.parse(fs_1.readFileSync(pkgPath, "utf8"));
+    let version = oldPackageJSON.version;
+    try {
+        const prod = yield getBetaExtension(md.packageJSON.publisher, md.packageJSON.name);
+        version = prod.versions[0].version;
+    }
+    catch (error) {
+        console.log(`${md.name} is a new package, starting from version in package.json`);
+    }
+    const semverMarkers = version.split(".");
+    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
     oldPackageJSON.version = newVersion;
     fs_1.writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
-    console.log(`Updated ${md.name} to ${newVersion}`);
+    console.log(`Updated ${md.name} to ${newVersion} from vscode marketplace`);
 });
 const getBetaExtension = (org, name) => __awaiter(void 0, void 0, void 0, function* () {
     const headers = {
@@ -2382,7 +2389,7 @@ const getPackageVersion = (packageMD) => __awaiter(void 0, void 0, void 0, funct
         return npmInfo.data['dist-tags'].latest;
     }
     catch (error) {
-        console.log("New package, starting from version in package.json");
+        console.log(`${packageMD.name} is a new package, starting from version in package.json`);
         const pkgPath = join(packageMD.path, "package.json");
         const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
         return oldPackageJSON.version;
@@ -2398,7 +2405,7 @@ exports.bumpVersionNPM = (packageMD) => __awaiter(void 0, void 0, void 0, functi
     const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
     oldPackageJSON.version = newVersion;
     writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
-    console.log(`Updated ${packageMD.name} to ${newVersion}`);
+    console.log(`Updated ${packageMD.name} to ${newVersion} from npm`);
 });
 
 

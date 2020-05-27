@@ -50,6 +50,7 @@ async function deploy(packageMetadata: Set<PackageMetadata>) {
 }
 
 async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
+  console.log(" ---------------------------- ")
   for (const packageMD of packageMetadata) {
     if (packageMD.type === 'vscode') {
       await bumpVersionVscode(packageMD)

@@ -4,17 +4,22 @@ import { join } from "path";
 import { readFileSync, writeFileSync } from "fs";
 
 export const bumpVersionVscode = async (md: PackageMetadata) => {
-  const prod = await getBetaExtension(md.packageJSON.publisher, md.packageJSON.name)
-  
-  const latestVersion = prod.versions[0].version;
-  const semverMarkers = latestVersion.split(".");
-  const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
-
   const pkgPath = join(md.path, "package.json");
   const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
+  let version = oldPackageJSON.version
+  try {
+    const prod = await getBetaExtension(md.packageJSON.publisher, md.packageJSON.name)
+    version = prod.versions[0].version;
+  } catch (error) {
+    console.log(`${md.name} is a new package, starting from version in package.json`) 
+  }
+  
+  const semverMarkers = version.split(".");
+  const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
+
   oldPackageJSON.version = newVersion;
   writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
-  console.log(`Updated ${md.name} to ${newVersion}`);
+  console.log(`Updated ${md.name} to ${newVersion} from vscode marketplace`);
 }
 
 const getBetaExtension = async (org: string, name: string) => {
