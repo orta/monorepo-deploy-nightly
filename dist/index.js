@@ -453,13 +453,15 @@ exports.runDeployer = (settings) => __awaiter(void 0, void 0, void 0, function* 
     const files = child_process_1.execSync(`git log --pretty=format: --name-only --since="${settings.since}"`, { encoding: 'utf8', cwd: settings.cwd });
     const changedPackages = getChangedPackages(files);
     const packageMetadata = getPackageMetadata(changedPackages, settings);
-    yield bumpVersions(packageMetadata);
-    yield deploy(packageMetadata);
+    console.log("Found the following packages with changes: ", packageMetadata);
+    const deployablePackages = filterPackages(packageMetadata);
+    yield bumpVersions(deployablePackages);
+    yield deploy(deployablePackages);
 });
 function deploy(packageMetadata) {
     return __awaiter(this, void 0, void 0, function* () {
         for (const packageMD of packageMetadata) {
-            console.log(`Deploying ${packageMD.name}.`);
+            console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
                 child_process_1.execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
                     encoding: 'utf8',
@@ -474,7 +476,7 @@ function deploy(packageMetadata) {
 }
 function bumpVersions(packageMetadata) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(" ---------------------------- ");
+        console.log("Bumping versions:");
         for (const packageMD of packageMetadata) {
             if (packageMD.type === 'vscode') {
                 yield vscode_1.bumpVersionVscode(packageMD);
@@ -484,6 +486,21 @@ function bumpVersions(packageMetadata) {
             }
         }
     });
+}
+function filterPackages(packageMetadata) {
+    const deployable = new Set();
+    const removedForPrivate = [];
+    packageMetadata.forEach(md => {
+        if (md.isPrivate) {
+            removedForPrivate.push(md.name);
+            return;
+        }
+        deployable.add(md);
+    });
+    if (removedForPrivate.length) {
+        console.log(`Removed ${removedForPrivate.length} for being private modules`);
+    }
+    return deployable;
 }
 function getPackageMetadata(changedPackages, settings) {
     const packageMetadata = new Set();

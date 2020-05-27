@@ -31,13 +31,16 @@ export const runDeployer = async (settings: RunSettings) => {
 
   const changedPackages = getChangedPackages(files)
   const packageMetadata = getPackageMetadata(changedPackages, settings)
-  await bumpVersions(packageMetadata)
-  await deploy(packageMetadata)
+  console.log("Found the following packages with changes: ", packageMetadata)
+  
+  const deployablePackages = filterPackages(packageMetadata)
+  await bumpVersions(deployablePackages)
+  await deploy(deployablePackages)
 }
 
 async function deploy(packageMetadata: Set<PackageMetadata>) {
   for (const packageMD of packageMetadata) {
-    console.log(`Deploying ${packageMD.name}.`)
+    console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
       execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
         encoding: 'utf8',
@@ -50,7 +53,7 @@ async function deploy(packageMetadata: Set<PackageMetadata>) {
 }
 
 async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
-  console.log(" ---------------------------- ")
+  console.log("Bumping versions:")
   for (const packageMD of packageMetadata) {
     if (packageMD.type === 'vscode') {
       await bumpVersionVscode(packageMD)
@@ -58,6 +61,26 @@ async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
       await bumpVersionNPM(packageMD)
     }
   }
+}
+
+function filterPackages(packageMetadata: Set<PackageMetadata>) {
+  const deployable = new Set<PackageMetadata>()
+  const removedForPrivate: string[] = []
+
+  packageMetadata.forEach(md => {
+    if (md.isPrivate) {
+      removedForPrivate.push(md.name)
+      return
+    }
+    
+    deployable.add(md)
+  })
+
+  if (removedForPrivate.length) {
+    console.log(`Removed ${removedForPrivate.length} for being private modules`)
+  }
+
+  return deployable
 }
 
 function getPackageMetadata(
