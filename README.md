@@ -7,6 +7,8 @@ This will look in `packages/*` for packages which have _any_ changes based on th
  - Packages marked 'private' are ignored
  - Packages with vscode in engines are deployed via [`vsce`](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
 
+It will grab the latest semver number from either npm or the vscode marketplace, and then bump it by a patch,
+
 ```yml
 name: Deploy Daily Builds
 
@@ -33,7 +35,7 @@ jobs:
       - run: "yarn build"
 
       # Shipit
-      - uses orta/monorepo-deploy-nightly@master
+      - uses: orta/monorepo-deploy-nightly@master
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
@@ -42,7 +44,7 @@ jobs:
 For a weekly deploy:
 
 ```yml
-      - uses orta/monorepo-deploy-nightly@master
+      - uses: orta/monorepo-deploy-nightly@master
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
@@ -50,7 +52,9 @@ For a weekly deploy:
           since: '1 week ago'
 ```
 
-TODO: For a build where a specific file changing in the build triggers a deploy
+### TODO
+
+For a build where a specific file changing in the build triggers a deploy
 
 ```yml
       - uses orta/monorepo-deploy-nightly@master
@@ -61,9 +65,3 @@ TODO: For a build where a specific file changing in the build triggers a deploy
           since: '1 week ago'
           changed: "relative/path/to/file/from/package'
 ```
-
-
-### TODO
-
-- All of the above
-- The ability to handle something like tsconfig/base
