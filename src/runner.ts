@@ -24,6 +24,8 @@ export type PackageMetadata = {
 }
 
 export const runDeployer = async (settings: RunSettings) => {
+  console.log(`Looking at changes in ${settings.cwd} since ${settings.since}`)
+
   const files = execSync(
     `git log --pretty=format: --name-only --since="${settings.since}"`,
     {encoding: 'utf8', cwd: settings.cwd}
