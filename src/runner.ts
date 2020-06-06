@@ -31,7 +31,7 @@ export const runDeployer = async (settings: RunSettings) => {
 
   const changedPackages = getChangedPackages(files)
   const packageMetadata = getPackageMetadata(changedPackages, settings)
-  console.log("Found the following packages with changes: ", packageMetadata)
+  console.log("Found the following packages with changes: ", [...packageMetadata].map(m => m.name))
   
   const deployablePackages = filterPackages(packageMetadata)
   await bumpVersions(deployablePackages)
@@ -44,10 +44,11 @@ async function deploy(packageMetadata: Set<PackageMetadata>) {
     if (packageMD.type === 'vscode') {
       execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
         encoding: 'utf8',
-        cwd: packageMD.path
+        cwd: packageMD.path,
+        stdio: 'inherit'
       })
     } else if (packageMD.type === 'npm') {
-      execSync(`npm publish`, {encoding: 'utf8', cwd: packageMD.path})
+      execSync(`npm publish`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
     }
   }
 }
@@ -128,5 +129,6 @@ function getChangedPackages(files: string) {
 }
 
 if (!module.parent) {
+  console.log("Running with 30 days")
   runDeployer({since: '30 day ago', cwd: '../language-tools'})
 }
