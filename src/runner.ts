@@ -128,7 +128,7 @@ function getChangedPackages(files: string) {
   return changedPackages
 }
 
-if (!module.parent) {
+if (require.main === module) {
   console.log("Running with 30 days")
   runDeployer({since: '30 day ago', cwd: '../language-tools'})
 }
