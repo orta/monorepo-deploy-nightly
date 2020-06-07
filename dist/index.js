@@ -36,8 +36,6 @@ module.exports =
 /******/ 		// Load entry module and return exports
 /******/ 		return __webpack_require__(198);
 /******/ 	};
-/******/ 	// initialize runtime
-/******/ 	runtime(__webpack_require__);
 /******/
 /******/ 	// run startup
 /******/ 	return startup();
@@ -424,10 +422,9 @@ module.exports = {
 /***/ }),
 
 /***/ 39:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
-/* module decorator */ module = __webpack_require__.nmd(module);
 
 // This file does the real work, you can test it locally via
 //
@@ -450,10 +447,11 @@ const fs_1 = __webpack_require__(747);
 const vscode_1 = __webpack_require__(166);
 const npm_1 = __webpack_require__(509);
 exports.runDeployer = (settings) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Looking at changes in ${settings.cwd} since ${settings.since}`);
     const files = child_process_1.execSync(`git log --pretty=format: --name-only --since="${settings.since}"`, { encoding: 'utf8', cwd: settings.cwd });
     const changedPackages = getChangedPackages(files);
     const packageMetadata = getPackageMetadata(changedPackages, settings);
-    console.log("Found the following packages with changes: ", packageMetadata);
+    console.log("Found the following packages with changes: ", [...packageMetadata].map(m => m.name));
     const deployablePackages = filterPackages(packageMetadata);
     yield bumpVersions(deployablePackages);
     yield deploy(deployablePackages);
@@ -465,11 +463,12 @@ function deploy(packageMetadata) {
             if (packageMD.type === 'vscode') {
                 child_process_1.execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
                     encoding: 'utf8',
-                    cwd: packageMD.path
+                    cwd: packageMD.path,
+                    stdio: 'inherit'
                 });
             }
             else if (packageMD.type === 'npm') {
-                child_process_1.execSync(`npm publish`, { encoding: 'utf8', cwd: packageMD.path });
+                child_process_1.execSync(`npm publish`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
             }
         }
     });
@@ -536,9 +535,7 @@ function getChangedPackages(files) {
     });
     return changedPackages;
 }
-if (!module.parent) {
-    exports.runDeployer({ since: '30 day ago', cwd: '../language-tools' });
-}
+if (false) {}
 
 
 /***/ }),
@@ -4052,26 +4049,4 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
 
 /***/ })
 
-/******/ },
-/******/ function(__webpack_require__) { // webpackRuntimeModules
-/******/ 	"use strict";
-/******/ 
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	!function() {
-/******/ 		__webpack_require__.nmd = function(module) {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'loaded', {
-/******/ 				enumerable: true,
-/******/ 				get: function() { return module.l; }
-/******/ 			});
-/******/ 			Object.defineProperty(module, 'id', {
-/******/ 				enumerable: true,
-/******/ 				get: function() { return module.i; }
-/******/ 			});
-/******/ 			return module;
-/******/ 		};
-/******/ 	}();
-/******/ 	
-/******/ }
-);
+/******/ });
