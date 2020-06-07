@@ -8,10 +8,13 @@ import {sep, join} from 'path'
 import {readFileSync} from 'fs'
 import {bumpVersionVscode} from './bumping/vscode'
 import {bumpVersionNPM} from './bumping/npm'
+import { Settings } from 'http2'
 
 export type RunSettings = {
   since: string
   cwd: string
+  sort: [],
+  install: boolean
 }
 
 export type PackageMetadata = {
@@ -37,11 +40,18 @@ export const runDeployer = async (settings: RunSettings) => {
   
   const deployablePackages = filterPackages(packageMetadata)
   await bumpVersions(deployablePackages)
-  await deploy(deployablePackages)
+  await deploy(deployablePackages, settings)
 }
 
-async function deploy(packageMetadata: Set<PackageMetadata>) {
-  for (const packageMD of packageMetadata) {
+async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettings) {
+  const packages = sortedPackages(packageMetadata, settings.sort);
+
+  for (const packageMD of packages) {
+    if (settings.install) {
+      console.log(`\n\n# npm installing for ${packageMD.name}.`)
+      execSync(`npm install`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+    }
+
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
       execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
@@ -130,7 +140,18 @@ function getChangedPackages(files: string) {
   return changedPackages
 }
 
+function sortedPackages(packageMetadata: Set<PackageMetadata>, sort: string[]) {
+  const results: PackageMetadata[] = []
+  const items = [...packageMetadata]
+
+  items.sort(function(a, b){  
+    return sort.indexOf(a.name) - sort.indexOf(b.name);
+  });
+
+  return results
+}
+
 if (require.main === module) {
   console.log("Running with 30 days")
-  runDeployer({since: '30 day ago', cwd: '../language-tools'})
+  runDeployer({since: '30 day ago', cwd: '../language-tools', install: true, sort: []})
 }

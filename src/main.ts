@@ -5,10 +5,14 @@ async function run(): Promise<void> {
   try {
     const since = core.getInput('since') || '1 day ago'
     const cwd = core.getInput('cwd') || '.'
+    const sort = JSON.parse(core.getInput('sort')) || []
+    const install = !!core.getInput('install') || false
 
     const settings: RunSettings = {
       since,
-      cwd
+      cwd,
+      sort,
+      install
     }
 
     await runDeployer(settings)

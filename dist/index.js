@@ -454,11 +454,16 @@ exports.runDeployer = (settings) => __awaiter(void 0, void 0, void 0, function* 
     console.log("Found the following packages with changes: ", [...packageMetadata].map(m => m.name));
     const deployablePackages = filterPackages(packageMetadata);
     yield bumpVersions(deployablePackages);
-    yield deploy(deployablePackages);
+    yield deploy(deployablePackages, settings);
 });
-function deploy(packageMetadata) {
+function deploy(packageMetadata, settings) {
     return __awaiter(this, void 0, void 0, function* () {
-        for (const packageMD of packageMetadata) {
+        const packages = sortedPackages(packageMetadata, settings.sort);
+        for (const packageMD of packages) {
+            if (settings.install) {
+                console.log(`\n\n# npm installing for ${packageMD.name}.`);
+                child_process_1.execSync(`npm install`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
+            }
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
                 child_process_1.execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
@@ -534,6 +539,14 @@ function getChangedPackages(files) {
         changedPackages.add(dirs[1]);
     });
     return changedPackages;
+}
+function sortedPackages(packageMetadata, sort) {
+    const results = [];
+    const items = [...packageMetadata];
+    items.sort(function (a, b) {
+        return sort.indexOf(a.name) - sort.indexOf(b.name);
+    });
+    return results;
 }
 if (false) {}
 
@@ -1067,9 +1080,13 @@ function run() {
         try {
             const since = core.getInput('since') || '1 day ago';
             const cwd = core.getInput('cwd') || '.';
+            const sort = JSON.parse(core.getInput('sort')) || [];
+            const install = !!core.getInput('install') || false;
             const settings = {
                 since,
-                cwd
+                cwd,
+                sort,
+                install
             };
             yield runner_1.runDeployer(settings);
         }
