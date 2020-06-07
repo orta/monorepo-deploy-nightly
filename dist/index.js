@@ -541,12 +541,11 @@ function getChangedPackages(files) {
     return changedPackages;
 }
 function sortedPackages(packageMetadata, sort) {
-    const results = [];
     const items = [...packageMetadata];
     items.sort(function (a, b) {
         return sort.indexOf(a.name) - sort.indexOf(b.name);
     });
-    return results;
+    return items;
 }
 if (false) {}
 

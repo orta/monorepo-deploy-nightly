@@ -141,14 +141,13 @@ function getChangedPackages(files: string) {
 }
 
 function sortedPackages(packageMetadata: Set<PackageMetadata>, sort: string[]) {
-  const results: PackageMetadata[] = []
   const items = [...packageMetadata]
 
   items.sort(function(a, b){  
     return sort.indexOf(a.name) - sort.indexOf(b.name);
   });
 
-  return results
+  return items
 }
 
 if (require.main === module) {
