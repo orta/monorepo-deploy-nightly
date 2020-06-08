@@ -47,7 +47,10 @@ async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettin
   const packages = sortedPackages(packageMetadata, settings.sort);
 
   for (const packageMD of packages) {
-    const exec = (cmd: string) => execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+    const exec = (cmd: string) => {
+      console.log("> " + cmd)
+      execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+    }
 
     if (settings.install) {
       console.log(`\n\n# npm installing for ${packageMD.name}.`)

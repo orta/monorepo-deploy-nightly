@@ -460,7 +460,10 @@ function deploy(packageMetadata, settings) {
     return __awaiter(this, void 0, void 0, function* () {
         const packages = sortedPackages(packageMetadata, settings.sort);
         for (const packageMD of packages) {
-            const exec = (cmd) => child_process_1.execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
+            const exec = (cmd) => {
+                console.log("> " + cmd);
+                child_process_1.execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
+            };
             if (settings.install) {
                 console.log(`\n\n# npm installing for ${packageMD.name}.`);
                 exec(`npm install --production`);
