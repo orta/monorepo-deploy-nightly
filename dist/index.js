@@ -460,20 +460,17 @@ function deploy(packageMetadata, settings) {
     return __awaiter(this, void 0, void 0, function* () {
         const packages = sortedPackages(packageMetadata, settings.sort);
         for (const packageMD of packages) {
+            const exec = (cmd) => child_process_1.execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
             if (settings.install) {
                 console.log(`\n\n# npm installing for ${packageMD.name}.`);
-                child_process_1.execSync(`npm install`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
+                exec(`npm install`);
             }
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
-                child_process_1.execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
-                    encoding: 'utf8',
-                    cwd: packageMD.path,
-                    stdio: 'inherit'
-                });
+                exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`);
             }
             else if (packageMD.type === 'npm') {
-                child_process_1.execSync(`npm publish`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
+                exec(`npm publish`);
             }
         }
     });
