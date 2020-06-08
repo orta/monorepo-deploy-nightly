@@ -463,7 +463,7 @@ function deploy(packageMetadata, settings) {
             const exec = (cmd) => child_process_1.execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
             if (settings.install) {
                 console.log(`\n\n# npm installing for ${packageMD.name}.`);
-                exec(`npm install`);
+                exec(`npm install --production`);
             }
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {

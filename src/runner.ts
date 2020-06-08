@@ -51,7 +51,7 @@ async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettin
 
     if (settings.install) {
       console.log(`\n\n# npm installing for ${packageMD.name}.`)
-      exec(`npm install`)
+      exec(`npm install --production`)
     }
 
     console.log(`\n\n# Deploying ${packageMD.name}.`)
