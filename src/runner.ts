@@ -47,20 +47,18 @@ async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettin
   const packages = sortedPackages(packageMetadata, settings.sort);
 
   for (const packageMD of packages) {
+    const exec = (cmd: string) => execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+
     if (settings.install) {
       console.log(`\n\n# npm installing for ${packageMD.name}.`)
-      execSync(`npm install`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+      exec(`npm install`)
     }
 
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
-      execSync(`npx vsce publish --yarn -p ${process.env.VSCE_TOKEN}`, {
-        encoding: 'utf8',
-        cwd: packageMD.path,
-        stdio: 'inherit'
-      })
+      exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
     } else if (packageMD.type === 'npm') {
-      execSync(`npm publish`, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+      exec(`npm publish`)
     }
   }
 }
