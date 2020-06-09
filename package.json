@@ -5,7 +5,7 @@
   "description": "Deploys moonrepo",
   "main": "lib/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn ncc build",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "pack": "ncc build",
