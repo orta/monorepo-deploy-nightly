@@ -466,7 +466,6 @@ function deploy(packageMetadata, settings) {
             };
             if (settings.install) {
                 console.log(`\n\n# npm installing for ${packageMD.name}.`);
-                exec(`npm prune --production`);
                 exec(`npm install --production`);
             }
             console.log(`\n\n# Deploying ${packageMD.name}.`);
