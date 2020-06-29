@@ -7,13 +7,14 @@ import {EOL} from 'os'
 import {sep, join} from 'path'
 import {readFileSync} from 'fs'
 import {bumpVersionVscode} from './bumping/vscode'
+import {bumpVersionOpenVsx} from './bumping/openvsx'
 import {bumpVersionNPM} from './bumping/npm'
-import { Settings } from 'http2'
+import {Settings} from 'http2'
 
 export type RunSettings = {
   since: string
   cwd: string
-  sort: [],
+  sort: []
   install: boolean
 }
 
@@ -23,7 +24,7 @@ export type PackageMetadata = {
   name: string
   packageJSON: any
   isPrivate: boolean
-  type: 'npm' | 'vscode'
+  type: 'npm' | 'vscode' | 'openvsx'
 }
 
 export const runDeployer = async (settings: RunSettings) => {
@@ -36,20 +37,26 @@ export const runDeployer = async (settings: RunSettings) => {
 
   const changedPackages = getChangedPackages(files)
   const packageMetadata = getPackageMetadata(changedPackages, settings)
-  console.log("Found the following packages with changes: ", [...packageMetadata].map(m => m.name))
-  
+  console.log(
+    'Found the following packages with changes: ',
+    [...packageMetadata].map(m => m.name)
+  )
+
   const deployablePackages = filterPackages(packageMetadata)
   await bumpVersions(deployablePackages)
   await deploy(deployablePackages, settings)
 }
 
-async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettings) {
-  const packages = sortedPackages(packageMetadata, settings.sort);
+async function deploy(
+  packageMetadata: Set<PackageMetadata>,
+  settings: RunSettings
+) {
+  const packages = sortedPackages(packageMetadata, settings.sort)
 
   for (const packageMD of packages) {
     const exec = (cmd: string) => {
-      console.log("> " + cmd)
-      execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' })
+      console.log('> ' + cmd)
+      execSync(cmd, {encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit'})
     }
 
     if (settings.install) {
@@ -59,7 +66,13 @@ async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettin
 
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
-      exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
+      if (process.env.VSCE_TOKEN) {
+        exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
+      }
+      if (process.env.OVSX_TOKEN) {
+        exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`)
+      }
+
     } else if (packageMD.type === 'npm') {
       exec(`npm publish`)
     }
@@ -67,13 +80,20 @@ async function deploy(packageMetadata: Set<PackageMetadata>, settings: RunSettin
 }
 
 async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
-  console.log("Bumping versions:")
+  console.log('Bumping versions:')
+
   for (const packageMD of packageMetadata) {
     if (packageMD.type === 'vscode') {
-      await bumpVersionVscode(packageMD)
+      if (process.env.VSCE_TOKEN) {
+        await bumpVersionVscode(packageMD)
+      }
+      if (process.env.OVSX_TOKEN) {
+        await bumpVersionOpenVsx(packageMD)
+      }
+
     } else if (packageMD.type === 'npm') {
       await bumpVersionNPM(packageMD)
-    }
+    } 
   }
 }
 
@@ -86,7 +106,7 @@ function filterPackages(packageMetadata: Set<PackageMetadata>) {
       removedForPrivate.push(md.name)
       return
     }
-    
+
     deployable.add(md)
   })
 
@@ -144,14 +164,19 @@ function getChangedPackages(files: string) {
 function sortedPackages(packageMetadata: Set<PackageMetadata>, sort: string[]) {
   const items = [...packageMetadata]
 
-  items.sort(function(a, b){  
-    return sort.indexOf(a.name) - sort.indexOf(b.name);
-  });
+  items.sort(function(a, b) {
+    return sort.indexOf(a.name) - sort.indexOf(b.name)
+  })
 
   return items
 }
 
 if (require.main === module) {
-  console.log("Running with 30 days")
-  runDeployer({since: '30 day ago', cwd: '../language-tools', install: true, sort: []})
+  console.log('Running with 30 days')
+  runDeployer({
+    since: '30 day ago',
+    cwd: '../language-tools',
+    install: true,
+    sort: []
+  })
 }
