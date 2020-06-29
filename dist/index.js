@@ -445,13 +445,14 @@ const os_1 = __webpack_require__(87);
 const path_1 = __webpack_require__(622);
 const fs_1 = __webpack_require__(747);
 const vscode_1 = __webpack_require__(166);
+const openvsx_1 = __webpack_require__(895);
 const npm_1 = __webpack_require__(509);
 exports.runDeployer = (settings) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Looking at changes in ${settings.cwd} since ${settings.since}`);
     const files = child_process_1.execSync(`git log --pretty=format: --name-only --since="${settings.since}"`, { encoding: 'utf8', cwd: settings.cwd });
     const changedPackages = getChangedPackages(files);
     const packageMetadata = getPackageMetadata(changedPackages, settings);
-    console.log("Found the following packages with changes: ", [...packageMetadata].map(m => m.name));
+    console.log('Found the following packages with changes: ', [...packageMetadata].map(m => m.name));
     const deployablePackages = filterPackages(packageMetadata);
     yield bumpVersions(deployablePackages);
     yield deploy(deployablePackages, settings);
@@ -461,7 +462,7 @@ function deploy(packageMetadata, settings) {
         const packages = sortedPackages(packageMetadata, settings.sort);
         for (const packageMD of packages) {
             const exec = (cmd) => {
-                console.log("> " + cmd);
+                console.log('> ' + cmd);
                 child_process_1.execSync(cmd, { encoding: 'utf8', cwd: packageMD.path, stdio: 'inherit' });
             };
             if (settings.install) {
@@ -470,7 +471,12 @@ function deploy(packageMetadata, settings) {
             }
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
-                exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`);
+                if (process.env.VSCE_TOKEN) {
+                    exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`);
+                }
+                if (process.env.OVSX_TOKEN) {
+                    exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`);
+                }
             }
             else if (packageMD.type === 'npm') {
                 exec(`npm publish`);
@@ -480,10 +486,15 @@ function deploy(packageMetadata, settings) {
 }
 function bumpVersions(packageMetadata) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("Bumping versions:");
+        console.log('Bumping versions:');
         for (const packageMD of packageMetadata) {
             if (packageMD.type === 'vscode') {
-                yield vscode_1.bumpVersionVscode(packageMD);
+                if (process.env.VSCE_TOKEN) {
+                    yield vscode_1.bumpVersionVscode(packageMD);
+                }
+                if (process.env.OVSX_TOKEN) {
+                    yield openvsx_1.bumpVersionOpenVsx(packageMD);
+                }
             }
             else if (packageMD.type === 'npm') {
                 yield npm_1.bumpVersionNPM(packageMD);
@@ -3939,6 +3950,66 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
     : baseURL;
 };
+
+
+/***/ }),
+
+/***/ 895:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.bumpVersionOpenVsx = void 0;
+const axios_1 = __importDefault(__webpack_require__(53));
+const path_1 = __webpack_require__(622);
+const fs_1 = __webpack_require__(747);
+exports.bumpVersionOpenVsx = (md) => __awaiter(void 0, void 0, void 0, function* () {
+    const pkgPath = path_1.join(md.path, 'package.json');
+    const oldPackageJSON = JSON.parse(fs_1.readFileSync(pkgPath, 'utf8'));
+    let version = oldPackageJSON.version;
+    try {
+        const prod = yield getPackageVersion(md.packageJSON.publisher, md.packageJSON.name);
+        version = prod.version;
+    }
+    catch (error) {
+        console.log(`${md.name} is a new package, starting from version in package.json`);
+    }
+    const semverMarkers = version.split('.');
+    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
+    oldPackageJSON.version = newVersion;
+    fs_1.writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
+    console.log(`Updated ${md.name} to ${newVersion} from OpenVsx marketplace`);
+});
+const getPackageVersion = (namespace, name) => __awaiter(void 0, void 0, void 0, function* () {
+    const query = `${namespace}.${name}`;
+    const extensionSearchResults = yield axios_1.default({
+        url: `https://open-vsx.org/api/-/search?query=${query}&offset=0&size=10&sortBy=relevance&sortOrder=desc`,
+        method: 'GET'
+    });
+    if (!extensionSearchResults.data || !extensionSearchResults.data.extensions) {
+        throw new Error('Got a bad response from marketplace');
+    }
+    const foundExtension = extensionSearchResults.data.extensions.find((extension) => {
+        return extension.name === name && extension.namespace === namespace;
+    });
+    if (!foundExtension) {
+        throw new Error('Extension not found in the marketplace query');
+    }
+    return foundExtension;
+});
 
 
 /***/ }),
