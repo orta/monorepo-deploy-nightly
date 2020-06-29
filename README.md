@@ -5,7 +5,9 @@ Deploy projects which have changed on a nightly basis. You might not need this [
 This will look in `packages/*` for packages which have _any_ changes based on the [`since` option in git](https://www.git-scm.com/docs/git-log#_commit_limiting):
  
  - Packages marked 'private' are ignored
- - Packages with vscode in engines are deployed via [`vsce`](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)
+ - Packages with vscode in engines are:
+  - deployed via [`vsce`](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) when there is a `VSCE_TOKEN` in the env
+  - deployed via [`ovsx`](https://www.npmjs.com/package/ovsx) when there is a `OVSX_TOKEN` in the env
 
 It will grab the latest semver number from either npm or the vscode marketplace, and then bump it by a patch,
 

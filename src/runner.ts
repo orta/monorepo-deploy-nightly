@@ -66,25 +66,34 @@ async function deploy(
 
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
-      exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
+      if (process.env.VSCE_TOKEN) {
+        exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
+      }
+      if (process.env.OVSX_TOKEN) {
+        exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`)
+      }
+
     } else if (packageMD.type === 'npm') {
       exec(`npm publish`)
-    } else if (packageMD.type === 'openvsx') {
-      exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`)
     }
   }
 }
 
 async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
   console.log('Bumping versions:')
+
   for (const packageMD of packageMetadata) {
     if (packageMD.type === 'vscode') {
-      await bumpVersionVscode(packageMD)
+      if (process.env.VSCE_TOKEN) {
+        await bumpVersionVscode(packageMD)
+      }
+      if (process.env.OVSX_TOKEN) {
+        await bumpVersionOpenVsx(packageMD)
+      }
+
     } else if (packageMD.type === 'npm') {
       await bumpVersionNPM(packageMD)
-    } else if (packageMD.type === 'openvsx') {
-      await bumpVersionOpenVsx(packageMD)
-    }
+    } 
   }
 }
 

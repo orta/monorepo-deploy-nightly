@@ -1,4 +1,3 @@
-import ovsx from 'ovsx'
 import axios from 'axios'
 import {join} from 'path'
 import {readFileSync, writeFileSync} from 'fs'
@@ -42,8 +41,7 @@ const getPackageVersion = async (namespace: string, name: string) => {
     throw new Error('Got a bad response from marketplace')
   }
 
-  const foundExtension = extensionSearchResults.data.extensions.find(
-    extension => {
+  const foundExtension = extensionSearchResults.data.extensions.find((extension: any) => {
       return extension.name === name && extension.namespace === namespace
     }
   )
