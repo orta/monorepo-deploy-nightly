@@ -2436,16 +2436,31 @@ const getPackageVersion = (packageMD) => __awaiter(void 0, void 0, void 0, funct
         return oldPackageJSON.version;
     }
 });
+const isPackageJSONVersionHigher = (packageJSONVersion, bumpedVersion) => {
+    const semverMarkersPackageJSON = packageJSONVersion.split(".");
+    const semverMarkersBumped = bumpedVersion.split(".");
+    for (let i = 0; i < 3; i++) {
+        if (Number(semverMarkersPackageJSON[i]) > Number(semverMarkersBumped[i])) {
+            return true;
+        }
+    }
+    return false;
+};
+const bumpPatch = (version) => {
+    const semverMarkers = version.split(".");
+    return `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
+};
 exports.bumpVersionNPM = (packageMD) => __awaiter(void 0, void 0, void 0, function* () {
     const version = yield getPackageVersion(packageMD);
     if (!version)
         throw new Error("Could not find the npm version in the registry");
-    const semverMarkers = version.split(".");
-    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
     const pkgPath = join(packageMD.path, "package.json");
-    const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
-    oldPackageJSON.version = newVersion;
-    writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
+    const packageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
+    const newVersion = isPackageJSONVersionHigher(packageJSON.version, version)
+        ? packageJSON.version
+        : bumpPatch(version);
+    packageJSON.version = newVersion;
+    writeFileSync(pkgPath, JSON.stringify(packageJSON));
     console.log(`Updated ${packageMD.name} to ${newVersion} from npm`);
 });
 
