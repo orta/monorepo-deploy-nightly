@@ -1,24 +1,26 @@
-import { PackageMetadata } from "../runner";
-import axios from "axios"
-import { join } from "path";
+import axios from "axios";
 import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { PackageMetadata } from "../runner";
+import { bumpPatch, isPackageJSONVersionHigher } from "./utils";
 
 export const bumpVersionVscode = async (md: PackageMetadata) => {
   const pkgPath = join(md.path, "package.json");
-  const oldPackageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
-  let version = oldPackageJSON.version
+  const packageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
+  let version = packageJSON.version
   try {
     const prod = await getBetaExtension(md.packageJSON.publisher, md.packageJSON.name)
     version = prod.versions[0].version;
   } catch (error) {
     console.log(`${md.name} is a new package, starting from version in package.json`) 
   }
-  
-  const semverMarkers = version.split(".");
-  const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
 
-  oldPackageJSON.version = newVersion;
-  writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
+  const newVersion = isPackageJSONVersionHigher(packageJSON.version, version)
+    ? packageJSON.version
+    : bumpPatch(version);
+
+  packageJSON.version = newVersion;
+  writeFileSync(pkgPath, JSON.stringify(packageJSON));
   console.log(`Updated ${md.name} to ${newVersion} from vscode marketplace`);
 }
 
