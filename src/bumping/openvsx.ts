@@ -1,12 +1,13 @@
 import axios from 'axios'
-import {join} from 'path'
-import {readFileSync, writeFileSync} from 'fs'
-import {PackageMetadata} from '../runner'
+import { readFileSync, writeFileSync } from 'fs'
+import { join } from 'path'
+import { PackageMetadata } from '../runner'
+import { bumpPatch, isPackageJSONVersionHigher } from './utils'
 
 export const bumpVersionOpenVsx = async (md: PackageMetadata) => {
   const pkgPath = join(md.path, 'package.json')
-  const oldPackageJSON = JSON.parse(readFileSync(pkgPath, 'utf8'))
-  let version = oldPackageJSON.version
+  const packageJSON = JSON.parse(readFileSync(pkgPath, 'utf8'))
+  let version = packageJSON.version
   try {
     const prod = await getPackageVersion(
       md.packageJSON.publisher,
@@ -19,13 +20,12 @@ export const bumpVersionOpenVsx = async (md: PackageMetadata) => {
     )
   }
 
-  const semverMarkers = version.split('.')
-  const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(
-    semverMarkers[2]
-  ) + 1}`
+  const newVersion = isPackageJSONVersionHigher(packageJSON.version, version)
+    ? packageJSON.version
+    : bumpPatch(version);
 
-  oldPackageJSON.version = newVersion
-  writeFileSync(pkgPath, JSON.stringify(oldPackageJSON))
+  packageJSON.version = newVersion
+  writeFileSync(pkgPath, JSON.stringify(packageJSON))
   console.log(`Updated ${md.name} to ${newVersion} from OpenVsx marketplace`)
 }
 

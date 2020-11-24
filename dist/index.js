@@ -997,12 +997,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bumpVersionVscode = void 0;
 const axios_1 = __importDefault(__webpack_require__(53));
-const path_1 = __webpack_require__(622);
 const fs_1 = __webpack_require__(747);
+const path_1 = __webpack_require__(622);
+const utils_1 = __webpack_require__(474);
 exports.bumpVersionVscode = (md) => __awaiter(void 0, void 0, void 0, function* () {
     const pkgPath = path_1.join(md.path, "package.json");
-    const oldPackageJSON = JSON.parse(fs_1.readFileSync(pkgPath, "utf8"));
-    let version = oldPackageJSON.version;
+    const packageJSON = JSON.parse(fs_1.readFileSync(pkgPath, "utf8"));
+    let version = packageJSON.version;
     try {
         const prod = yield getBetaExtension(md.packageJSON.publisher, md.packageJSON.name);
         version = prod.versions[0].version;
@@ -1010,10 +1011,11 @@ exports.bumpVersionVscode = (md) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         console.log(`${md.name} is a new package, starting from version in package.json`);
     }
-    const semverMarkers = version.split(".");
-    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
-    oldPackageJSON.version = newVersion;
-    fs_1.writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
+    const newVersion = utils_1.isPackageJSONVersionHigher(packageJSON.version, version)
+        ? packageJSON.version
+        : utils_1.bumpPatch(version);
+    packageJSON.version = newVersion;
+    fs_1.writeFileSync(pkgPath, JSON.stringify(packageJSON));
     console.log(`Updated ${md.name} to ${newVersion} from vscode marketplace`);
 });
 const getBetaExtension = (org, name) => __awaiter(void 0, void 0, void 0, function* () {
@@ -2402,6 +2404,32 @@ exports.getState = getState;
 
 /***/ }),
 
+/***/ 474:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isPackageJSONVersionHigher = exports.bumpPatch = void 0;
+exports.bumpPatch = (version) => {
+    const semverMarkers = version.split('.');
+    return `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) +
+        1}`;
+};
+exports.isPackageJSONVersionHigher = (packageJSONVersion, bumpedVersion) => {
+    const semverMarkersPackageJSON = packageJSONVersion.split('.');
+    const semverMarkersBumped = bumpedVersion.split('.');
+    for (let i = 0; i < 3; i++) {
+        if (Number(semverMarkersPackageJSON[i]) > Number(semverMarkersBumped[i])) {
+            return true;
+        }
+    }
+    return false;
+};
+
+
+/***/ }),
+
 /***/ 509:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -2418,6 +2446,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bumpVersionNPM = void 0;
+const utils_1 = __webpack_require__(474);
 const { writeFileSync, readFileSync } = __webpack_require__(747);
 const { join } = __webpack_require__(622);
 const axios = __webpack_require__(53).default;
@@ -2436,29 +2465,15 @@ const getPackageVersion = (packageMD) => __awaiter(void 0, void 0, void 0, funct
         return oldPackageJSON.version;
     }
 });
-const isPackageJSONVersionHigher = (packageJSONVersion, bumpedVersion) => {
-    const semverMarkersPackageJSON = packageJSONVersion.split(".");
-    const semverMarkersBumped = bumpedVersion.split(".");
-    for (let i = 0; i < 3; i++) {
-        if (Number(semverMarkersPackageJSON[i]) > Number(semverMarkersBumped[i])) {
-            return true;
-        }
-    }
-    return false;
-};
-const bumpPatch = (version) => {
-    const semverMarkers = version.split(".");
-    return `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
-};
 exports.bumpVersionNPM = (packageMD) => __awaiter(void 0, void 0, void 0, function* () {
     const version = yield getPackageVersion(packageMD);
     if (!version)
         throw new Error("Could not find the npm version in the registry");
     const pkgPath = join(packageMD.path, "package.json");
     const packageJSON = JSON.parse(readFileSync(pkgPath, "utf8"));
-    const newVersion = isPackageJSONVersionHigher(packageJSON.version, version)
+    const newVersion = utils_1.isPackageJSONVersionHigher(packageJSON.version, version)
         ? packageJSON.version
-        : bumpPatch(version);
+        : utils_1.bumpPatch(version);
     packageJSON.version = newVersion;
     writeFileSync(pkgPath, JSON.stringify(packageJSON));
     console.log(`Updated ${packageMD.name} to ${newVersion} from npm`);
@@ -3989,12 +4004,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bumpVersionOpenVsx = void 0;
 const axios_1 = __importDefault(__webpack_require__(53));
-const path_1 = __webpack_require__(622);
 const fs_1 = __webpack_require__(747);
+const path_1 = __webpack_require__(622);
+const utils_1 = __webpack_require__(474);
 exports.bumpVersionOpenVsx = (md) => __awaiter(void 0, void 0, void 0, function* () {
     const pkgPath = path_1.join(md.path, 'package.json');
-    const oldPackageJSON = JSON.parse(fs_1.readFileSync(pkgPath, 'utf8'));
-    let version = oldPackageJSON.version;
+    const packageJSON = JSON.parse(fs_1.readFileSync(pkgPath, 'utf8'));
+    let version = packageJSON.version;
     try {
         const prod = yield getPackageVersion(md.packageJSON.publisher, md.packageJSON.name);
         version = prod.version;
@@ -4002,10 +4018,11 @@ exports.bumpVersionOpenVsx = (md) => __awaiter(void 0, void 0, void 0, function*
     catch (error) {
         console.log(`${md.name} is a new package, starting from version in package.json`);
     }
-    const semverMarkers = version.split('.');
-    const newVersion = `${semverMarkers[0]}.${semverMarkers[1]}.${Number(semverMarkers[2]) + 1}`;
-    oldPackageJSON.version = newVersion;
-    fs_1.writeFileSync(pkgPath, JSON.stringify(oldPackageJSON));
+    const newVersion = utils_1.isPackageJSONVersionHigher(packageJSON.version, version)
+        ? packageJSON.version
+        : utils_1.bumpPatch(version);
+    packageJSON.version = newVersion;
+    fs_1.writeFileSync(pkgPath, JSON.stringify(packageJSON));
     console.log(`Updated ${md.name} to ${newVersion} from OpenVsx marketplace`);
 });
 const getPackageVersion = (namespace, name) => __awaiter(void 0, void 0, void 0, function* () {
