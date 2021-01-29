@@ -7,12 +7,14 @@ async function run(): Promise<void> {
     const cwd = core.getInput('cwd') || '.'
     const sort = JSON.parse(core.getInput('sort')) || []
     const install = !!core.getInput('install') || false
+    const only = JSON.parse(core.getInput('only'))
 
     const settings: RunSettings = {
       since,
       cwd,
       sort,
-      install
+      install,
+      only
     }
 
     await runDeployer(settings)

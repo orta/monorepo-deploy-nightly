@@ -14,8 +14,9 @@ import {Settings} from 'http2'
 export type RunSettings = {
   since: string
   cwd: string
-  sort: []
+  sort: string[]
   install: boolean
+  only?: string[]
 }
 
 export type PackageMetadata = {
@@ -42,7 +43,7 @@ export const runDeployer = async (settings: RunSettings) => {
     [...packageMetadata].map(m => m.name)
   )
 
-  const deployablePackages = filterPackages(packageMetadata)
+  const deployablePackages = filterPackages(packageMetadata, settings)
   await bumpVersions(deployablePackages)
   await deploy(deployablePackages, settings)
 }
@@ -97,13 +98,21 @@ async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
   }
 }
 
-function filterPackages(packageMetadata: Set<PackageMetadata>) {
+function filterPackages(
+  packageMetadata: Set<PackageMetadata>,
+  settings: RunSettings
+) {
   const deployable = new Set<PackageMetadata>()
   const removedForPrivate: string[] = []
+  const removedForFilter: string[] = []
 
   packageMetadata.forEach(md => {
     if (md.isPrivate) {
       removedForPrivate.push(md.name)
+      return
+    }
+    if (settings.only && !settings.only.includes(md.name)) {
+      removedForFilter.push(md.name)
       return
     }
 
@@ -112,6 +121,9 @@ function filterPackages(packageMetadata: Set<PackageMetadata>) {
 
   if (removedForPrivate.length) {
     console.log(`Removed ${removedForPrivate.length} for being private modules`)
+  }
+  if (removedForFilter.length) {
+    console.log(`Removed ${removedForFilter.length} for being filtered out modules`)
   }
 
   return deployable
