@@ -13,6 +13,8 @@ inputs:
     default: 'false'
   sort:
     description: 'The sort order for the deploy process based on the names of the packages, expected to be a JSON.parse-able array of string.'
+  only:
+    description: 'If you only want to deploy specific packages, list them here.'
 runs:
   using: 'node12'
   main: 'dist/index.js'
