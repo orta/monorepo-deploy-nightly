@@ -453,7 +453,7 @@ exports.runDeployer = (settings) => __awaiter(void 0, void 0, void 0, function* 
     const changedPackages = getChangedPackages(files);
     const packageMetadata = getPackageMetadata(changedPackages, settings);
     console.log('Found the following packages with changes: ', [...packageMetadata].map(m => m.name));
-    const deployablePackages = filterPackages(packageMetadata);
+    const deployablePackages = filterPackages(packageMetadata, settings);
     yield bumpVersions(deployablePackages);
     yield deploy(deployablePackages, settings);
 });
@@ -502,18 +502,26 @@ function bumpVersions(packageMetadata) {
         }
     });
 }
-function filterPackages(packageMetadata) {
+function filterPackages(packageMetadata, settings) {
     const deployable = new Set();
     const removedForPrivate = [];
+    const removedForFilter = [];
     packageMetadata.forEach(md => {
         if (md.isPrivate) {
             removedForPrivate.push(md.name);
+            return;
+        }
+        if (settings.only && !settings.only.includes(md.name)) {
+            removedForFilter.push(md.name);
             return;
         }
         deployable.add(md);
     });
     if (removedForPrivate.length) {
         console.log(`Removed ${removedForPrivate.length} for being private modules`);
+    }
+    if (removedForFilter.length) {
+        console.log(`Removed ${removedForFilter.length} for being filtered out modules`);
     }
     return deployable;
 }
@@ -1094,11 +1102,13 @@ function run() {
             const cwd = core.getInput('cwd') || '.';
             const sort = JSON.parse(core.getInput('sort')) || [];
             const install = !!core.getInput('install') || false;
+            const only = JSON.parse(core.getInput('only'));
             const settings = {
                 since,
                 cwd,
                 sort,
-                install
+                install,
+                only
             };
             yield runner_1.runDeployer(settings);
         }
