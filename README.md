@@ -43,7 +43,7 @@ jobs:
           VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
 ```
 
-For a weekly deploy, with npm installs and a custom sort order:
+For a weekly deploy, with npm installs, a custom sort order and only specific packages:
 
 ```yml
       - uses: orta/monorepo-deploy-nightly@master
@@ -53,6 +53,7 @@ For a weekly deploy, with npm installs and a custom sort order:
         with: 
           since: '1 week ago'
           sort: '["one", "three", "two"]'
+          only: '["one", "three", "two"]'
           install: 'true'
 ```
 
