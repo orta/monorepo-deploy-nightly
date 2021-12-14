@@ -472,7 +472,7 @@ function deploy(packageMetadata, settings) {
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
                 if (process.env.VSCE_TOKEN) {
-                    const suffix = settings.preview ? "--pre-release" : "";
+                    const suffix = settings.preview ? '--pre-release' : '';
                     exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${suffix}`);
                 }
                 if (process.env.OVSX_TOKEN) {
@@ -1105,7 +1105,7 @@ function run() {
             const sort = JSON.parse(core.getInput('sort')) || [];
             const install = !!core.getInput('install') || false;
             const only = JSON.parse(core.getInput('only'));
-            const preview = JSON.parse(core.getInput('preview')) || false;
+            const preview = !!core.getInput('preview') || false;
             const settings = {
                 since,
                 cwd,
