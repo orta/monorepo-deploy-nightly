@@ -479,8 +479,7 @@ function deploy(packageMetadata, settings) {
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
                 if (process.env.VSCE_TOKEN) {
-                    const suffix = settings.preview ? '--pre-release' : '';
-                    exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${suffix}`);
+                    exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${settings.vsceParams}`);
                 }
                 if (process.env.OVSX_TOKEN) {
                     exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`);
@@ -549,7 +548,7 @@ function getPackageMetadata(changedPackages, settings) {
             type,
             isPrivate,
             dirname: packagePath,
-            preview: settings.preview
+            vsceParams: settings.vsceParams
         });
     });
     return packageMetadata;
@@ -1479,15 +1478,17 @@ function run() {
             const cwd = core.getInput('cwd') || '.';
             const sort = core.getInput('sort') ? JSON.parse(core.getInput('sort')) : [];
             const install = !!core.getInput('install') || false;
-            const only = core.getInput('only') ? JSON.parse(core.getInput('only')) : undefined;
-            const preview = !!core.getInput('preview') || false;
+            const only = core.getInput('only')
+                ? JSON.parse(core.getInput('only'))
+                : undefined;
+            const vsceParams = core.getInput('vsce_params') || "";
             const settings = {
                 since,
                 cwd,
                 sort,
                 install,
                 only,
-                preview
+                vsceParams
             };
             yield runner_1.runDeployer(settings);
         }

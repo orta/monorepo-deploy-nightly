@@ -17,7 +17,7 @@ export type RunSettings = {
   sort: string[]
   install: boolean
   only?: string[]
-  preview: boolean
+  vsceParams: string
 }
 
 export type PackageMetadata = {
@@ -27,7 +27,7 @@ export type PackageMetadata = {
   packageJSON: any
   isPrivate: boolean
   type: 'npm' | 'vscode' | 'openvsx'
-  preview: boolean
+  vsceParams: string
 }
 
 export const runDeployer = async (settings: RunSettings) => {
@@ -70,8 +70,9 @@ async function deploy(
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
       if (process.env.VSCE_TOKEN) {
-        const suffix = settings.preview ? '--pre-release' : ''
-        exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${suffix}`)
+        exec(
+          `npx vsce publish -p ${process.env.VSCE_TOKEN} ${settings.vsceParams}`
+        )
       }
       if (process.env.OVSX_TOKEN) {
         exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`)
@@ -155,7 +156,7 @@ function getPackageMetadata(
       type,
       isPrivate,
       dirname: packagePath,
-      preview: settings.preview
+      vsceParams: settings.vsceParams
     })
   })
 
@@ -194,6 +195,6 @@ if (require.main === module) {
     cwd: '../language-tools',
     install: true,
     sort: [],
-    preview: true
+    vsceParams: ''
   })
 }

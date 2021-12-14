@@ -10,7 +10,7 @@ async function run(): Promise<void> {
     const only = core.getInput('only')
       ? JSON.parse(core.getInput('only'))
       : undefined
-    const preview = !!core.getInput('preview') || false
+    const vsceParams = core.getInput('vsce_params') || ''
 
     const settings: RunSettings = {
       since,
@@ -18,7 +18,7 @@ async function run(): Promise<void> {
       sort,
       install,
       only,
-      preview
+      vsceParams
     }
 
     await runDeployer(settings)

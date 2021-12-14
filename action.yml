@@ -15,9 +15,9 @@ inputs:
     description: 'The sort order for the deploy process based on the names of the packages, expected to be a JSON.parse-able array of string.'
   only:
     description: 'If you only want to deploy specific packages, list them here.'
-  preview:
-    default: 'false'
-    description: 'Only currently works for vscode extensions, it will deploy those with --pre-release'
+  vsceParams:
+    default: ''
+    description: 'Additional params for the vsce command'
 runs:
   using: 'node12'
   main: 'dist/index.js'

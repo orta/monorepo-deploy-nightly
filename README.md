@@ -65,7 +65,7 @@ Deploy nightly builds for vscode extensions [which get deployed as pre-releases]
         env:
           VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
         with: 
-          preview: 'true'
+          vsceParams: '--pre-release --yarn'
 ```
 
 ### TODO
