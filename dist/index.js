@@ -1481,7 +1481,7 @@ function run() {
             const only = core.getInput('only')
                 ? JSON.parse(core.getInput('only'))
                 : undefined;
-            const vsceParams = core.getInput('vsce_params') || "";
+            const vsceParams = core.getInput('vsce-params') || '';
             const settings = {
                 since,
                 cwd,

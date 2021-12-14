@@ -15,7 +15,7 @@ inputs:
     description: 'The sort order for the deploy process based on the names of the packages, expected to be a JSON.parse-able array of string.'
   only:
     description: 'If you only want to deploy specific packages, list them here.'
-  vsceParams:
+  vsce-params:
     default: ''
     description: 'Additional params for the vsce command'
 runs:

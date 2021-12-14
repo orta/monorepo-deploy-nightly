@@ -10,7 +10,7 @@ async function run(): Promise<void> {
     const only = core.getInput('only')
       ? JSON.parse(core.getInput('only'))
       : undefined
-    const vsceParams = core.getInput('vsce_params') || ''
+    const vsceParams = core.getInput('vsce-params') || ''
 
     const settings: RunSettings = {
       since,
