@@ -7,7 +7,9 @@ async function run(): Promise<void> {
     const cwd = core.getInput('cwd') || '.'
     const sort = core.getInput('sort') ? JSON.parse(core.getInput('sort')) : []
     const install = !!core.getInput('install') || false
-    const only = core.getInput('only') ? JSON.parse(core.getInput('only')) : []
+    const only = core.getInput('only')
+      ? JSON.parse(core.getInput('only'))
+      : undefined
     const preview = !!core.getInput('preview') || false
 
     const settings: RunSettings = {
