@@ -10,7 +10,7 @@ inputs:
     default: '.'
   install:
     description: 'Run npm install before deploying a package, defaults to off'
-    default: 'false'
+    default: ''
   sort:
     description: 'The sort order for the deploy process based on the names of the packages, expected to be a JSON.parse-able array of string.'
   only:
