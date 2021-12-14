@@ -17,6 +17,7 @@ export type RunSettings = {
   sort: string[]
   install: boolean
   only?: string[]
+  preview: boolean
 }
 
 export type PackageMetadata = {
@@ -26,6 +27,7 @@ export type PackageMetadata = {
   packageJSON: any
   isPrivate: boolean
   type: 'npm' | 'vscode' | 'openvsx'
+  preview: boolean
 }
 
 export const runDeployer = async (settings: RunSettings) => {
@@ -68,12 +70,12 @@ async function deploy(
     console.log(`\n\n# Deploying ${packageMD.name}.`)
     if (packageMD.type === 'vscode') {
       if (process.env.VSCE_TOKEN) {
-        exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`)
+        const suffix = settings.preview ? '--pre-release' : ''
+        exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${suffix}`)
       }
       if (process.env.OVSX_TOKEN) {
         exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`)
       }
-
     } else if (packageMD.type === 'npm') {
       exec(`npm publish`)
     }
@@ -91,10 +93,9 @@ async function bumpVersions(packageMetadata: Set<PackageMetadata>) {
       if (process.env.OVSX_TOKEN) {
         await bumpVersionOpenVsx(packageMD)
       }
-
     } else if (packageMD.type === 'npm') {
       await bumpVersionNPM(packageMD)
-    } 
+    }
   }
 }
 
@@ -123,7 +124,9 @@ function filterPackages(
     console.log(`Removed ${removedForPrivate.length} for being private modules`)
   }
   if (removedForFilter.length) {
-    console.log(`Removed ${removedForFilter.length} for being filtered out modules`)
+    console.log(
+      `Removed ${removedForFilter.length} for being filtered out modules`
+    )
   }
 
   return deployable
@@ -151,7 +154,8 @@ function getPackageMetadata(
       packageJSON: json,
       type,
       isPrivate,
-      dirname: packagePath
+      dirname: packagePath,
+      preview: settings.preview
     })
   })
 
@@ -189,6 +193,7 @@ if (require.main === module) {
     since: '30 day ago',
     cwd: '../language-tools',
     install: true,
-    sort: []
+    sort: [],
+    preview: true
   })
 }

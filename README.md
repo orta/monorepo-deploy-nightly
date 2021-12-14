@@ -57,6 +57,16 @@ For a weekly deploy, with npm installs, a custom sort order and only specific pa
           install: 'true'
 ```
 
+Deploy nightly builds for vscode extensions [which get deployed as pre-releases](https://code.visualstudio.com/updates/v1_63#_pre-release-extensions):
+
+
+```yml
+      - uses: orta/monorepo-deploy-nightly@master
+        env:
+          VSCE_TOKEN: ${{ secrets.AZURE_PAN_TOKEN }}
+        with: 
+          preview: 'true'
+```
 
 ### TODO
 

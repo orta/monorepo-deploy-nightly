@@ -8,18 +8,21 @@ async function run(): Promise<void> {
     const sort = JSON.parse(core.getInput('sort')) || []
     const install = !!core.getInput('install') || false
     const only = JSON.parse(core.getInput('only'))
+    const preview = JSON.parse(core.getInput('preview')) || false
 
     const settings: RunSettings = {
       since,
       cwd,
       sort,
       install,
-      only
+      only,
+      preview
     }
 
     await runDeployer(settings)
   } catch (error) {
-    core.setFailed(error.message)
+    const err = error as any
+    core.setFailed(err.message)
   }
 }
 

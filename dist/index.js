@@ -472,7 +472,8 @@ function deploy(packageMetadata, settings) {
             console.log(`\n\n# Deploying ${packageMD.name}.`);
             if (packageMD.type === 'vscode') {
                 if (process.env.VSCE_TOKEN) {
-                    exec(`npx vsce publish -p ${process.env.VSCE_TOKEN}`);
+                    const suffix = settings.preview ? "--pre-release" : "";
+                    exec(`npx vsce publish -p ${process.env.VSCE_TOKEN} ${suffix}`);
                 }
                 if (process.env.OVSX_TOKEN) {
                     exec(`npx ovsx publish -p ${process.env.OVSX_TOKEN}`);
@@ -540,7 +541,8 @@ function getPackageMetadata(changedPackages, settings) {
             packageJSON: json,
             type,
             isPrivate,
-            dirname: packagePath
+            dirname: packagePath,
+            preview: settings.preview
         });
     });
     return packageMetadata;
@@ -1103,17 +1105,20 @@ function run() {
             const sort = JSON.parse(core.getInput('sort')) || [];
             const install = !!core.getInput('install') || false;
             const only = JSON.parse(core.getInput('only'));
+            const preview = JSON.parse(core.getInput('preview')) || false;
             const settings = {
                 since,
                 cwd,
                 sort,
                 install,
-                only
+                only,
+                preview
             };
             yield runner_1.runDeployer(settings);
         }
         catch (error) {
-            core.setFailed(error.message);
+            const err = error;
+            core.setFailed(err.message);
         }
     });
 }
