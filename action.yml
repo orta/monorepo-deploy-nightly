@@ -1,5 +1,5 @@
 name: 'JS Monorepo Deploy Nightly'
-description: 'Deploys packages/* npm/vscode packages when the change'
+description: 'Deploys packages/* for npm/vscode packages when they change'
 author: 'Orta Therox'
 inputs:
   since:
@@ -15,6 +15,9 @@ inputs:
     description: 'The sort order for the deploy process based on the names of the packages, expected to be a JSON.parse-able array of string.'
   only:
     description: 'If you only want to deploy specific packages, list them here.'
+  preview:
+    default: 'false'
+    description: 'Only currently works for vscode extensions, it will deploy those with --pre-release'
 runs:
   using: 'node12'
   main: 'dist/index.js'
